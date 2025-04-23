@@ -1,1 +1,1 @@
-Peter Gumiran koya
+Paulit ulit na lang ce practice pa.
