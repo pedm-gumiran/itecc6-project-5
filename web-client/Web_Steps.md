@@ -3,7 +3,7 @@ Steps in Creating the Web Client Interface.
 1. Create the Project using react
    > npm create vite@ latest
    > Name it as Fitness-Workout-Log
-   > Name packagename
+   > Name package name
 
 # fitness-workout-log
 
