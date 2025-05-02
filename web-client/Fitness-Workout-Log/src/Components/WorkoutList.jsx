@@ -1,22 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Buttons from './Buttons';
+import axios from 'axios';
 
-export default function WorkoutList({ workouts }) {
-  if (!workouts || workouts.length === 0) {
+export default function WorkoutList() {
+  const [workoutList, setWorkoutList] = useState([]);
+
+  const fetchWorkouts = async () => {
+    try {
+      const res = await axios('/getworkouts'); // axios returns response with `data`
+      setWorkoutList(res.data); // Use res.data directly
+    } catch (error) {
+      console.error('Error fetching workoutLists:', error);
+    }
+  };
+  useEffect(() => {
+    fetchWorkouts();
+  }, []);
+
+  if (!workoutList || workoutList.length === 0) {
     return <h1>No workouts logged yet. Add your first workout above!</h1>;
   } else {
     return (
       <div>
-        {workouts.map((workout) => (
-          <div className="border-b-1 border-b-gray-400 grid sm:grid-cols-2" key={workout.id}>
+        {workoutList.map((workout, i) => (
+          <div
+            className="border-b-1 border-b-gray-400 grid sm:grid-cols-2"
+            key={i}
+          >
             <div>
               <h1 className="text-[20px] font-semibold">{workout.exercise}</h1>
-              <div className='text-[12px]'>
+              <div className="text-[12px]">
                 {workout.sets}x{workout.reps}|{workout.weight}kg|
-                {workout.totalWeight}kg Total
+                {workout.total_weight}kg Total
               </div>
-              <small className='text-12'>
-                {workout.workoutDate}|{workout.type}|{workout.notes}
+              <small className="text-12">
+                {workout.workout_date}|{workout.workout_type}|{workout.notes}
               </small>
             </div>
             <div className="flex gap-3 my-3  justify-end">
