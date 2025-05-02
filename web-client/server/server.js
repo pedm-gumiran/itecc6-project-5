@@ -1,12 +1,10 @@
 // Import the needed imports
 const express = require('express');
-const mysql = require('mysql2');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config({ path: '.env' }); // Load environment variables from .env file
-
-// Instatiate the application
 const app = express();
+const db = require('./config/database'); // Import the database connection
+
 
 // Implement cors or Cross origin resource sharing for managing and controlling web security
 app.use(cors());
@@ -14,17 +12,7 @@ app.use(cors());
 // Pass json data from incoming http request essential for processing data sent from a client
 app.use(express.json());
 
-const port = process.env.APP_PORT || 5000; // Set the port for the server to listen on, defaulting to 5000 if not specified in .env
-
-// Establish the connection to the database ensuring the server can interact with the database effectively
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-});
-
+const port = process.env.PORT || 5000; // Set the port for the server to listen on, defaulting to 3000 if not specified
 // for error handling in connecting the database
 db.connect((err) => {
   if (err) {
@@ -34,58 +22,44 @@ db.connect((err) => {
   console.log('Connected to the database');
 });
 
-// Setup midlleware function to serve static file crucial in handling client server assets like css and js
-app.use(express.static(path.join(__dirname, 'public')));
-// For serving the frontend files, ensuring that the server can serve static files from the public directory
-app.get('/api/users', (req, res) => {
-  const sql = 'SELECT * FROM tbladmin';
+app.get('/', (req, res) => {
+  res.send('Server is Ready!'); // Send a simple response for the root route
+});
 
-  db.query(sql, (err, results) => {
+
+// This is where you add routes for your API endpoints
+app.get('/getworkouts', (req, res) => {
+  const sql='SELECT * FROM workouts '; // SQL query to select all users from the database
+  db.query(sql, (err, result) => { // Execute the SQL query
+     if (err) {
+       console.error('Error fetching workoutLists:', err); // Log any errors that occur during the query
+       res.status(500).send('Error fetching workoutLists'); // Send a 500 error response if an error occurs
+       return;
+     }
+     res.json(result); // Send the result as a JSON response
+   });
+
+ } );
+app.post('/addworkouts', (req, res) => {
+  const { exercise, sets, reps, weight, total_weight, workout_date, workout_type, notes } = req.body; // Destructure the request body to get the workout data
+  const sql = 'INSERT INTO workouts (exercise, sets, reps, weight, total_weight, workout_date, workout_type, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'; // SQL query to insert a new user into the database
+  db.query(sql, [exercise, sets, reps, weight, total_weight, workout_date, workout_type, notes], (err) => { // Execute the SQL query
     if (err) {
-      console.error('Error fetching data from tbluser:', err);
-      res.status(500).json({ error: 'Database query failed' });
-    } else {
-      res.json(results); // Sends the array of user objects to frontend
+      console.error('Error adding new workout:', err); // Log any errors that occur during the query
+      res.status(500).send('Error adding new workout'); // Send a 500 error response if an error occurs
+      return;
     }
+    res.status(201).send('Workout added successfully'); // Send a success response if the query is successful
   });
 });
 
-// Handle login requests for admin
-app.post("/loginadmin", (req, res) => {// Handle login requests from the client
-  const { username, password } = req.body; // Extract email and password from the request body
-  db.query(
-    "SELECT * FROM tbladmin WHERE Username = ? AND Password = ?",// // Query the database to check if the user exists with the provided email and password
-    [username, password],  // Use parameterized queries to prevent SQL injection attacks
-    (err, results) => {
-      if (err) return res.status(500).send(err);// Handle any errors that occur during the query
-      if (results.length > 0) {// If a user is found, send a success response with the user data
-        res.json({ success: true, user: results[0] });
-      } else {// If no user is found, send a failure response
-        res.json({ success: false });
-      }
-    }
-  );
-});
-
-// Handle login requests for teacher
-app.post("/loginteacher", (req, res) => {// Handle login requests from the client
-  const { username, password } = req.body; // Extract email and password from the request body
-  db.query(
-    "SELECT * FROM tblteachers WHERE Username = ? AND Password = ?",// // Query the database to check if the user exists with the provided email and password
-    [username, password],  // Use parameterized queries to prevent SQL injection attacks
-    (err, results) => {
-      if (err) return res.status(500).send(err);// Handle any errors that occur during the query
-      if (results.length > 0) {// If a user is found, send a success response with the user data
-        res.json({ success: true, user: results[0] });
-      } else {// If no user is found, send a failure response
-        res.json({ success: false });
-      }
-    }
-  );
-});
 
 
+// Import the routes from the routes directory, which contains the API endpoints for the application
 
+// Setup midlleware function to serve static file crucial in handling client server assets like css and js
+app.use(express.static(path.join(__dirname, 'public')));
+// For serving the frontend files, ensuring that the server can serve static files from the public directory
 // Start the server making it ready to respond for incoming request and serves as the backbone of the full stack application
 console.log('Starting server...');
 

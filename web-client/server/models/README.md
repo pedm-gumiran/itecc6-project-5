@@ -1,1 +1,0 @@
-This folder contains files that define database models for each resources.
